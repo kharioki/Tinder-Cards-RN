@@ -7,14 +7,16 @@ import {
   TouchableOpacity,
   PanResponder,
   Platform,
-  FlatList
+  Dimensions
 } from 'react-native';
 // import clamp from 'clamp';
+import Carousel from 'react-native-looped-carousel';
 
 import {profiles} from './utils/profiles';
 import {Container, ProfileView, ButtonsView, Bottom} from './styles/AppStyles';
 
 const SWIPE_THRESHOLD = 120;
+const { width, height } = Dimensions.get('window');
 function clamp(value, min, max) {
   return min < max
     ? (value < min ? min : value > max ? max : value)
@@ -23,6 +25,11 @@ function clamp(value, min, max) {
 
 const App: FC = () => {
   const [items, setItems] = useState(profiles);
+  const [size, setSize] = useState({
+    width: '100%',
+    height: '100%',
+  });
+
   const animation = useRef(new Animated.ValueXY()).current;
   const opacity = useRef(new Animated.Value(1)).current;
   const scale = useRef(new Animated.Value(0.9)).current;
@@ -187,16 +194,38 @@ const App: FC = () => {
               : undefined;
 
             const imageStyle = isLastItem ? animatedImageStyles : undefined;
+            const generatePages = photos =>
+              photos.map((x, i) => (
+                <Animated.Image
+                  key={i}
+                  source={x.url}
+                  style={[styles.image, imageStyle]}
+                  resizeMode="cover"
+                />
+              ));
             return (
               <Animated.View
                 {...panHandlers}
                 style={[styles.card, cardStyle, nextStyle]}
                 key={item.id}>
-                <Animated.Image
-                  source={item.photos[0].url}
-                  style={[styles.image, imageStyle]}
-                  resizeMode="cover"
-                />
+                <Animated.View style={{flex: 1}}>
+                  <Carousel
+                    style={size}
+                    leftArrowText={' '}
+                    leftArrowStyle={styles.arrow}
+                    rightArrowText={' '}
+                    rightArrowStyle={styles.arrow}
+                    bullets
+                    bulletsContainerStyle={{top: 20}}
+                    arrows
+                    isLooped={false}
+                    autoplay={false}
+                    // onAnimateNextPage={p => console.log(p)}
+                  >
+                    {generatePages(item.photos)}
+                  </Carousel>
+                </Animated.View>
+
                 <Bottom style={styles.lowerText}>
                   <Text style={styles.name}>
                     {item.name}, {item.age}
@@ -353,6 +382,7 @@ const styles = StyleSheet.create({
     shadowColor: 'red',
     borderColor: 'red',
   },
+  arrow: {color: 'white', fontSize: 22, margin: 20},
 });
 
 export default App;
